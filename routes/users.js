@@ -102,7 +102,7 @@ router.delete('/:id/photo', auth, async (req, res) => {
 router.get('/profile', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -120,9 +120,11 @@ router.get('/profile', auth, async (req, res) => {
         email: user.email,
         telephone: user.telephone,
         role: user.role,
-        photo_profil: user.photo_profil, // Le chemin relatif
+        donateurType: user.donateurType || null,    // type de donateur si applicable
+        nomEntreprise: user.nomEntreprise || null,  // nom de l'entreprise si applicable
+        poste: user.poste || null,                  // poste si rôle personnel
+        photo_profil: user.photo_profil,            // chemin relatif
         statut: user.statut
-        // Ajoutez d'autres champs si nécessaire
       }
     });
   } catch (error) {

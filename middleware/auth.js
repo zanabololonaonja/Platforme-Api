@@ -35,22 +35,20 @@ const auth = async (req, res, next) => {
   }
 };
 
-// middleware/auth.js - AJOUTEZ cette fonction si elle n'existe pas
-
-// Middleware pour vérifier le rôle
-const requireRole = (allowedRoles) => {
+// Middleware pour vérifier les rôles
+const requireRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Accès non autorisé'
+        message: 'Accès non autorisé.'
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: 'Accès interdit - Rôle insuffisant'
+        message: 'Accès interdit. Rôle insuffisant.'
       });
     }
 
@@ -58,7 +56,4 @@ const requireRole = (allowedRoles) => {
   };
 };
 
-module.exports = {
-  auth,
-  requireRole // ← Assurez-vous qu'il est exporté
-};
+module.exports = { auth, requireRole };

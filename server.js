@@ -5,6 +5,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
+const campagnesRoutes = require('./routes/campagnes');
 
 // Configuration CORS
 app.use(cors({
@@ -60,6 +61,8 @@ app.use('/api/actualites', require('./routes/actualites'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/campagnes', campagnesRoutes);
+
 
 // Route de diagnostic
 app.get('/api/debug-uploads', (req, res) => {
@@ -122,7 +125,6 @@ app.use((req, res) => {
     url: req.url
   });
 });
-
 
 
 const PORT = process.env.PORT || 5000;

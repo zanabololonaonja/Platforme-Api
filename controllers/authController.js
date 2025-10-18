@@ -9,12 +9,22 @@ const generateToken = (id) => {
   });
 };
 
-// Inscription
+// INSCRIPTION
 exports.register = async (req, res) => {
   try {
-    const { nom, prenom, email, password, telephone, role } = req.body;
+    const { 
+      nom, 
+      prenom, 
+      email, 
+      password, 
+      telephone, 
+      role, 
+      donateurType, 
+      nomEntreprise, 
+      poste 
+    } = req.body;
 
-    console.log('📝 Tentative inscription:', { email, role });
+    console.log('📝 Tentative inscription:', { email, role, donateurType });
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await User.findByEmail(email);
@@ -32,15 +42,18 @@ exports.register = async (req, res) => {
       email,
       password,
       telephone,
-      role
+      role,
+      donateurType,
+      nomEntreprise,
+      poste
     });
 
     console.log('✅ Inscription réussie:', { id: user.id, email: user.email });
 
     res.status(201).json({
       success: true,
-      message: role === 'personnel' 
-        ? 'Compte créé avec succès. En attente de validation par l\'administrateur.' 
+      message: role === 'personnel'
+        ? 'Compte créé avec succès. En attente de validation par l\'administrateur.'
         : 'Compte créé avec succès.',
       user
     });
@@ -54,7 +67,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// Connexion - CORRECTION
+// CONNEXION
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -71,24 +84,16 @@ exports.login = async (req, res) => {
       });
     }
 
-    console.log('👤 Utilisateur trouvé:', { 
-      id: user.id, 
-      email: user.email,
-      hasPassword: !!user.password,  // ← CHANGEMENT: password au lieu de mot_de_passe
-      photo_profil: user.photo_profil 
-    });
+    console.log('👤 Utilisateur trouvé:', { id: user.id, email: user.email });
 
-    // ✅ CORRECTION: Utiliser directement 'password' puisque c'est le nom de colonne
     if (!user.password) {
-      console.log('❌ Aucun mot de passe trouvé pour l\'utilisateur');
       return res.status(400).json({
         success: false,
         message: 'Email ou mot de passe incorrect.'
       });
     }
 
-    // Vérifier le mot de passe
-    const isMatch = await bcrypt.compare(password, user.password);  // ← CHANGEMENT: user.password
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log('❌ Mot de passe incorrect pour:', email);
       return res.status(400).json({
@@ -106,10 +111,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Générer le token
     const token = generateToken(user.id);
 
-    // ✅ CORRECTION: Inclure photo_profil dans la réponse
     const userResponse = {
       id: user.id,
       nom: user.nom,
@@ -118,16 +121,11 @@ exports.login = async (req, res) => {
       telephone: user.telephone,
       role: user.role,
       statut: user.statut,
-      photo_profil: user.photo_profil || null
+      photo_profil: user.photo_profil || null,
+      donateurType: user.donateurType || null,
+      nomEntreprise: user.nomEntreprise || null,
+      poste: user.poste || null
     };
-
-    console.log('✅ Login réussi - Données envoyées:', {
-      id: userResponse.id,
-      nom: userResponse.nom,
-      prenom: userResponse.prenom,
-      photo_profil: userResponse.photo_profil,
-      hasPhoto: !!userResponse.photo_profil
-    });
 
     res.json({
       success: true,
@@ -145,11 +143,11 @@ exports.login = async (req, res) => {
   }
 };
 
-// Récupérer le profil utilisateur
+// PROFIL UTILISATEUR
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -157,7 +155,6 @@ exports.getProfile = async (req, res) => {
       });
     }
 
-    // ✅ CORRECTION: Retourner toutes les données
     const userResponse = {
       id: user.id,
       nom: user.nom,
@@ -166,13 +163,13 @@ exports.getProfile = async (req, res) => {
       telephone: user.telephone,
       role: user.role,
       statut: user.statut,
-      photo_profil: user.photo_profil || null
+      photo_profil: user.photo_profil || null,
+      donateurType: user.donateurType || null,
+      nomEntreprise: user.nomEntreprise || null,
+      poste: user.poste || null
     };
 
-    console.log('📋 Profil récupéré:', {
-      id: userResponse.id,
-      photo_profil: userResponse.photo_profil
-    });
+    console.log('📋 Profil récupéré:', userResponse);
 
     res.json({
       success: true,

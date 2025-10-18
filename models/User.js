@@ -5,7 +5,7 @@ class User {
   // Créer un utilisateur
   static async create(userData) {
     try {
-      const { nom, prenom, email, password, telephone, role, photo_profil } = userData;
+      const { nom, prenom, email, password, telephone, role, photo_profil, donateurType, nomEntreprise, poste } = userData;
       
       const hashedPassword = await bcrypt.hash(password, 10);
       
@@ -14,12 +14,15 @@ class User {
       if (role === 'admin') statut = 'actif';
 
       const query = `
-        INSERT INTO users (nom, prenom, email, password, telephone, role, statut, photo_profil)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, nom, prenom, email, telephone, role, statut, photo_profil, date_creation
+        INSERT INTO users (nom, prenom, email, password, telephone, role, statut, photo_profil, donateurType, nomEntreprise, poste)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING id, nom, prenom, email, telephone, role, statut, photo_profil, donateurType, nomEntreprise, poste, date_creation
       `;
       
-      const values = [nom, prenom, email, hashedPassword, telephone, role, statut, photo_profil || null];
+      const values = [
+        nom, prenom, email, hashedPassword, telephone, role, statut, 
+        photo_profil || null, donateurType || null, nomEntreprise || null, poste || null
+      ];
       const result = await db.query(query, values);
       return result.rows[0];
     } catch (error) {
@@ -28,17 +31,16 @@ class User {
     }
   }
 
-  // Trouver par email - CORRECTION
+  // Trouver par email
   static async findByEmail(email) {
     try {
       const query = `
         SELECT id, nom, prenom, email, telephone, role, statut, 
-               photo_profil, password, date_creation  -- ← CHANGEMENT: password au lieu de mot_de_passe
+               photo_profil, donateurType, nomEntreprise, poste, password, date_creation
         FROM users 
         WHERE email = $1
       `;
       const values = [email];
-      
       const result = await db.query(query, values);
       return result.rows[0] || null;
     } catch (error) {
@@ -52,12 +54,11 @@ class User {
     try {
       const query = `
         SELECT id, nom, prenom, email, telephone, role, statut, 
-               photo_profil, date_creation
+               photo_profil, donateurType, nomEntreprise, poste, date_creation
         FROM users 
         WHERE id = $1
       `;
       const values = [id];
-      
       const result = await db.query(query, values);
       return result.rows[0] || null;
     } catch (error) {
@@ -117,7 +118,7 @@ class User {
   static async findAll() {
     try {
       const query = `
-        SELECT id, nom, prenom, email, telephone, role, statut, photo_profil, date_creation 
+        SELECT id, nom, prenom, email, telephone, role, statut, photo_profil, donateurType, nomEntreprise, poste, date_creation 
         FROM users 
         ORDER BY date_creation DESC
       `;
@@ -129,78 +130,96 @@ class User {
     }
   }
 
+
   // Mettre à jour un utilisateur
-  static async update(id, userData) {
-    try {
-      const { nom, prenom, email, telephone, role, statut, photo_profil } = userData;
-      
-      // Construire la requête dynamiquement
-      const fields = [];
-      const values = [];
-      let paramCount = 1;
+ // Mettre à jour un utilisateur
+static async update(id, userData) {
+  try {
+    const { nom, prenom, email, telephone, role, statut, photo_profil, donateurType, nomEntreprise, poste } = userData;
+    
+    // Construire la requête dynamiquement
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
 
-      if (nom !== undefined) {
-        fields.push(`nom = $${paramCount}`);
-        values.push(nom);
-        paramCount++;
-      }
-      if (prenom !== undefined) {
-        fields.push(`prenom = $${paramCount}`);
-        values.push(prenom);
-        paramCount++;
-      }
-      if (email !== undefined) {
-        fields.push(`email = $${paramCount}`);
-        values.push(email);
-        paramCount++;
-      }
-      if (telephone !== undefined) {
-        fields.push(`telephone = $${paramCount}`);
-        values.push(telephone);
-        paramCount++;
-      }
-      if (role !== undefined) {
-        fields.push(`role = $${paramCount}`);
-        values.push(role);
-        paramCount++;
-      }
-      if (statut !== undefined) {
-        fields.push(`statut = $${paramCount}`);
-        values.push(statut);
-        paramCount++;
-      }
-      if (photo_profil !== undefined) {
-        fields.push(`photo_profil = $${paramCount}`);
-        values.push(photo_profil);
-        paramCount++;
-      }
-
-      // Ajouter la date de modification
-      fields.push(`date_modification = CURRENT_TIMESTAMP`);
-
-      if (fields.length === 0) {
-        throw new Error('Aucun champ à mettre à jour');
-      }
-
-      values.push(id);
-      
-      const query = `
-        UPDATE users 
-        SET ${fields.join(', ')}
-        WHERE id = $${paramCount}
-        RETURNING id, nom, prenom, email, telephone, role, statut, photo_profil, date_creation
-      `;
-      
-      console.log('📝 Requête UPDATE:', query);
-      console.log('📋 Valeurs:', values);
-      
-      const result = await db.query(query, values);
-      return result.rows[0];
-    } catch (error) {
-      console.error('❌ Erreur update:', error);
-      throw error;
+    if (nom !== undefined) {
+      fields.push(`nom = $${paramCount}`);
+      values.push(nom);
+      paramCount++;
     }
+    if (prenom !== undefined) {
+      fields.push(`prenom = $${paramCount}`);
+      values.push(prenom);
+      paramCount++;
+    }
+    if (email !== undefined) {
+      fields.push(`email = $${paramCount}`);
+      values.push(email);
+      paramCount++;
+    }
+    if (telephone !== undefined) {
+      fields.push(`telephone = $${paramCount}`);
+      values.push(telephone);
+      paramCount++;
+    }
+    if (role !== undefined) {
+      fields.push(`role = $${paramCount}`);
+      values.push(role);
+      paramCount++;
+    }
+    if (statut !== undefined) {
+      fields.push(`statut = $${paramCount}`);
+      values.push(statut);
+      paramCount++;
+    }
+    if (photo_profil !== undefined) {
+      fields.push(`photo_profil = $${paramCount}`);
+      values.push(photo_profil);
+      paramCount++;
+    }
+    if (donateurType !== undefined) {
+      fields.push(`donateurType = $${paramCount}`);
+      values.push(donateurType);
+      paramCount++;
+    }
+    if (nomEntreprise !== undefined) {
+      fields.push(`nomEntreprise = $${paramCount}`);
+      values.push(nomEntreprise);
+      paramCount++;
+    }
+    if (poste !== undefined) {
+      fields.push(`poste = $${paramCount}`);
+      values.push(poste);
+      paramCount++;
+    }
+
+    // Ajouter la date de modification
+    fields.push(`date_modification = CURRENT_TIMESTAMP`);
+
+    if (fields.length === 0) {
+      throw new Error('Aucun champ à mettre à jour');
+    }
+
+    values.push(id);
+    
+    const query = `
+      UPDATE users 
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING id, nom, prenom, email, telephone, role, statut, photo_profil, donateurType, nomEntreprise, poste, date_creation
+    `;
+    
+    console.log('📝 Requête UPDATE:', query);
+    console.log('📋 Valeurs:', values);
+    
+    const result = await db.query(query, values);
+    return result.rows[0];
+  } catch (error) {
+    console.error('❌ Erreur update:', error);
+    throw error;
   }
+}
+
 
   // Supprimer un utilisateur
   static async delete(id) {
@@ -214,36 +233,39 @@ class User {
     }
   }
 
-  // Mettre à jour la photo de profil
-  static async updatePhotoProfil(userId, photoPath) {
-    try {
-      console.log('📝 Mise à jour photo profil pour user:', userId, 'photo:', photoPath);
-      
-      const query = `
-        UPDATE users 
-        SET photo_profil = $1 
-        WHERE id = $2 
-        RETURNING id, nom, prenom, email, telephone, role, photo_profil, statut
-      `;
-      const values = [photoPath, userId];
-      
-      console.log('📋 Query:', query);
-      console.log('📦 Values:', values);
-      
-      const result = await db.query(query, values);
-      
-      if (result.rows.length === 0) {
-        console.log('❌ Aucun utilisateur trouvé avec ID:', userId);
-        return null;
-      }
-      
-      console.log('✅ Photo mise à jour avec succès:', result.rows[0]);
-      return result.rows[0];
-    } catch (error) {
-      console.error('❌ Erreur SQL updatePhotoProfil:', error);
-      throw error;
+ // ✅ Mise à jour de la photo de profil
+static async updatePhotoProfil(userId, photoPath) {
+  try {
+    console.log('📝 Mise à jour photo profil pour user:', userId, 'photo:', photoPath);
+    
+    const query = `
+      UPDATE users 
+      SET photo_profil = $1 
+      WHERE id = $2 
+      RETURNING 
+        id, nom, prenom, email, telephone, role, 
+        photo_profil, statut, donateurType, nomEntreprise, poste
+    `;
+    
+    const values = [photoPath, userId];
+    
+    console.log('📋 Query:', query);
+    console.log('📦 Values:', values);
+    
+    const result = await db.query(query, values);
+    
+    if (result.rows.length === 0) {
+      console.log('❌ Aucun utilisateur trouvé avec ID:', userId);
+      return null;
     }
+    
+    console.log('✅ Photo mise à jour avec succès:', result.rows[0]);
+    return result.rows[0];
+  } catch (error) {
+    console.error('❌ Erreur SQL updatePhotoProfil:', error);
+    throw error;
   }
+}
 
   // Compter le nombre total d'utilisateurs
   static async count() {
@@ -263,11 +285,13 @@ class User {
       const totalQuery = 'SELECT COUNT(*) FROM users';
       const roleQuery = 'SELECT role, COUNT(*) as count FROM users GROUP BY role';
       const statusQuery = 'SELECT statut, COUNT(*) as count FROM users GROUP BY statut';
+      const sourceTypeQuery = 'SELECT source_type, COUNT(*) as count FROM users GROUP BY source_type';
 
-      const [totalResult, roleResult, statusResult] = await Promise.all([
+      const [totalResult, roleResult, statusResult, sourceTypeResult] = await Promise.all([
         db.query(totalQuery),
         db.query(roleQuery),
-        db.query(statusQuery)
+        db.query(statusQuery),
+        db.query(sourceTypeQuery)
       ]);
 
       return {
@@ -278,6 +302,10 @@ class User {
         }, {}),
         byStatus: statusResult.rows.reduce((acc, row) => {
           acc[row.statut] = parseInt(row.count);
+          return acc;
+        }, {}),
+        bySourceType: sourceTypeResult.rows.reduce((acc, row) => {
+          acc[row.source_type] = parseInt(row.count);
           return acc;
         }, {})
       };

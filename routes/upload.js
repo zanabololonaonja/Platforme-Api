@@ -232,6 +232,49 @@ router.post('/article-images', auth, uploadArticleImages.array('images', 10), as
   }
 });
 
+
+
+// ============================
+// 🔹 3. UPLOAD IMAGES CAMPAGNES
+// ============================
+
+const ensureCampagnesDir = () => {
+  const campagnesDir = path.join(__dirname, '../uploads/campagnes');
+  if (!fs.existsSync(campagnesDir)) {
+    fs.mkdirSync(campagnesDir, { recursive: true });
+    console.log('✅ Dossier campagnes créé:', campagnesDir);
+  }
+  return campagnesDir;
+};
+const campagnesDir = ensureCampagnesDir();
+
+const campagneStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, campagnesDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'campagne-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const uploadCampagne = multer({ storage: campagneStorage });
+
+// POST - Image de campagne
+router.post('/campagne-image', auth, uploadCampagne.single('image'), async (req, res) => {
+  try {
+    if (!req.file)
+      return res.status(400).json({ success: false, message: 'Aucune image uploadée' });
+
+    const imageUrl = `/uploads/campagnes/${req.file.filename}`;
+
+    res.json({
+      success: true,
+      message: 'Image de campagne uploadée avec succès',
+      image: imageUrl
+    });
+  } catch (error) {
+    console.error('❌ Erreur upload campagne:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 // ==== FIN DE L'AJOUT ====
 
 module.exports = router;

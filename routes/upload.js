@@ -274,7 +274,6 @@ router.post('/campagne-image', auth, uploadCampagne.single('image'), async (req,
     console.error('❌ Erreur upload campagne:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-// ==== FIN DE L'AJOUT ====
+});// ==== FIN DE L'AJOUT ====
 
 module.exports = router;

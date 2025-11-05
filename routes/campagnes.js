@@ -55,26 +55,28 @@ router.get('/', async (req, res) => {
   }
 });
 
-// DELETE - Supprimer une campagne
 router.delete('/:id', auth, requireRole(['admin', 'personnel']), async (req, res) => {
   try {
-    const campagne = await Campagne.findById(req.params.id);
-    if (!campagne) return res.status(404).json({ success: false, message: 'Campagne non trouvée' });
+    const id = req.params.id;
+    const campagne = await Campagne.findById(id);
 
-    // Vérifier permission: admin = tous, personnel = ses propres campagnes
+    if (!campagne) {
+      return res.status(404).json({ success: false, message: 'Campagne non trouvée' });
+    }
+
+    // Vérifie que le personnel ne supprime que ses propres campagnes
     if (req.user.role !== 'admin' && campagne.auteur_id !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Non autorisé' });
     }
 
-    // Supprimer image si elle existe
+    // Supprime l'image si elle existe
     if (campagne.image) {
-      const fs = require('fs');
       const imgPath = path.join(__dirname, '..', 'uploads', 'campagnes', campagne.image);
       if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
     }
 
-    const deleted = await Campagne.deleteById(req.params.id);
-    res.json({ success: true, message: 'Campagne supprimée', campagne: deleted });
+    await Campagne.deleteById(id);
+    res.json({ success: true, message: 'Campagne supprimée avec succès' });
   } catch (error) {
     console.error('❌ Erreur suppression campagne:', error);
     res.status(500).json({ success: false, message: error.message });

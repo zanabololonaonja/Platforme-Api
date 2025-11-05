@@ -64,6 +64,10 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/campagnes', campagnesRoutes);
 
 
+const donsRouter = require("./routes/dons");
+app.use("/api/dons", donsRouter);
+
+
 // Route de diagnostic
 app.get('/api/debug-uploads', (req, res) => {
   const profilsPath = path.join(__dirname, 'uploads', 'profils');
@@ -107,6 +111,8 @@ app.get('/api/debug-uploads', (req, res) => {
     });
   }
 });
+
+
 
 // Route de test
 app.get('/api/test', (req, res) => {

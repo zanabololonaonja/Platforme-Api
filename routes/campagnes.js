@@ -4,6 +4,8 @@ const Campagne = require('../models/Campagne');
 const { auth, requireRole } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
 
 // Configuration multer pour upload d'image unique
 const storage = multer.diskStorage({

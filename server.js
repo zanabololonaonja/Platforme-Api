@@ -65,6 +65,9 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/campagnes', campagnesRoutes);
 app.use("/api/dons", require("./routes/dons"));
 app.use("/api/paiement-mvola", paiementMvola);
+app.get("/", (req, res) => {
+  res.send("✅ API ONG Ndao Hifanosika fonctionne !");
+});
 
 
 

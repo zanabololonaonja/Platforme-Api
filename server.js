@@ -68,10 +68,12 @@ app.use("/api/paiement-mvola", paiementMvola);
 app.get("/", (req, res) => {
   res.send("✅ API ONG Ndao Hifanosika fonctionne !");
 });
+app.get('/favicon.ico', (req, res) => res.status(204));
 
 
 
 const donsRouter = require("./routes/dons");
+app.use(cors());
 app.use("/api/dons", donsRouter);
 
 

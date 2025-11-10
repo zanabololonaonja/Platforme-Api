@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const app = express();
 const campagnesRoutes = require('./routes/campagnes');
+const paiementMvola = require("./routes/paiement-mvola");
 
 // Configuration CORS
 app.use(cors({
@@ -62,6 +63,9 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/campagnes', campagnesRoutes);
+app.use("/api/dons", require("./routes/dons"));
+app.use("/api/paiement-mvola", paiementMvola);
+
 
 
 const donsRouter = require("./routes/dons");
